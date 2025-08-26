@@ -1,20 +1,29 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet"
-import { Link, useNavigate } from "react-router-dom"
-import L from "leaflet"
-import { reportsAPI } from "../services/api"
-import { useAuth } from "../contexts/AuthContext"
-import { toast } from "react-toastify"
+import { useState, useEffect } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  useMapEvents,
+} from "react-leaflet";
+import { Link, useNavigate } from "react-router-dom";
+import L from "leaflet";
+import { reportsAPI } from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
+import { toast } from "react-toastify";
 
 // Fix for default markers in react-leaflet
-delete L.Icon.Default.prototype._getIconUrl
+delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-})
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
 
 // Custom marker icons for different statuses
 const createCustomIcon = (status) => {
@@ -23,7 +32,7 @@ const createCustomIcon = (status) => {
     in_progress: "#3b82f6", // blue
     resolved: "#10b981", // green
     rejected: "#ef4444", // red
-  }
+  };
 
   return L.divIcon({
     className: "custom-marker",
@@ -37,32 +46,32 @@ const createCustomIcon = (status) => {
     "></div>`,
     iconSize: [20, 20],
     iconAnchor: [10, 10],
-  })
-}
+  });
+};
 
 // Component to handle map clicks for creating new reports
 const MapClickHandler = ({ onMapClick }) => {
   useMapEvents({
     click: (e) => {
-      onMapClick(e.latlng)
+      onMapClick(e.latlng);
     },
-  })
-  return null
-}
+  });
+  return null;
+};
 
 const Map = () => {
-  const { isAuthenticated } = useAuth()
-  const navigate = useNavigate()
-  const [reports, setReports] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     status: "",
     category: "",
-  })
-  const [showCreateMode, setShowCreateMode] = useState(false)
+  });
+  const [showCreateMode, setShowCreateMode] = useState(false);
 
   // Lebanon center coordinates
-  const lebanonCenter = [33.8547, 35.8623]
+  const lebanonCenter = [33.8547, 35.8623];
 
   const categories = [
     { value: "illegal_dumping", label: "Illegal Dumping" },
@@ -70,45 +79,45 @@ const Map = () => {
     { value: "missed_collection", label: "Missed Collection" },
     { value: "hazardous_waste", label: "Hazardous Waste" },
     { value: "other", label: "Other" },
-  ]
+  ];
 
   const statuses = [
     { value: "pending", label: "Pending" },
     { value: "in_progress", label: "In Progress" },
     { value: "resolved", label: "Resolved" },
     { value: "rejected", label: "Rejected" },
-  ]
+  ];
 
   useEffect(() => {
-    fetchReports()
-  }, [filters])
+    fetchReports();
+  }, [filters]);
 
   const fetchReports = async () => {
     try {
-      setLoading(true)
-      const response = await reportsAPI.getReports({ ...filters, limit: 1000 }) // Get all reports for map
-      setReports(response.data.reports)
+      setLoading(true);
+      const response = await reportsAPI.getReports({ ...filters, limit: 1000 }); // Get all reports for map
+      setReports(response.data.reports);
     } catch (error) {
-      console.error("Error fetching reports:", error)
-      toast.error("Failed to load reports")
+      console.error("Error fetching reports:", error);
+      toast.error("Failed to load reports");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleFilterChange = (e) => {
     setFilters({
       ...filters,
       [e.target.name]: e.target.value,
-    })
-  }
+    });
+  };
 
   const handleMapClick = (latlng) => {
-    if (!showCreateMode) return
+    if (!showCreateMode) return;
 
     if (!isAuthenticated) {
-      toast.error("Please login to create reports")
-      return
+      toast.error("Please login to create reports");
+      return;
     }
 
     // Navigate to create report with pre-filled location
@@ -117,36 +126,36 @@ const Map = () => {
         latitude: latlng.lat,
         longitude: latlng.lng,
       },
-    })
-  }
+    });
+  };
 
   const getCategoryLabel = (category) => {
-    const cat = categories.find((c) => c.value === category)
-    return cat ? cat.label : category
-  }
+    const cat = categories.find((c) => c.value === category);
+    return cat ? cat.label : category;
+  };
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
-    })
-  }
+    });
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
       case "pending":
-        return "#f59e0b"
+        return "#f59e0b";
       case "in_progress":
-        return "#3b82f6"
+        return "#3b82f6";
       case "resolved":
-        return "#10b981"
+        return "#10b981";
       case "rejected":
-        return "#ef4444"
+        return "#ef4444";
       default:
-        return "#6b7280"
+        return "#6b7280";
     }
-  }
+  };
 
   return (
     <div className="container" style={{ margin: "2rem auto" }}>
@@ -156,7 +165,9 @@ const Map = () => {
           {isAuthenticated && (
             <button
               onClick={() => setShowCreateMode(!showCreateMode)}
-              className={`btn ${showCreateMode ? "btn-success" : "btn-secondary"}`}
+              className={`btn ${
+                showCreateMode ? "btn-success" : "btn-secondary"
+              }`}
             >
               {showCreateMode ? "Exit Create Mode" : "Create Mode"}
             </button>
@@ -170,7 +181,8 @@ const Map = () => {
       {showCreateMode && (
         <div className="card mb-4 bg-blue-50 border-blue-200">
           <p className="text-blue-800">
-            <strong>Create Mode Active:</strong> Click anywhere on the map to create a new report at that location.
+            <strong>Create Mode Active:</strong> Click anywhere on the map to
+            create a new report at that location.
           </p>
         </div>
       )}
@@ -181,7 +193,12 @@ const Map = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="form-label">Status</label>
-            <select name="status" className="form-select" value={filters.status} onChange={handleFilterChange}>
+            <select
+              name="status"
+              className="form-select"
+              value={filters.status}
+              onChange={handleFilterChange}
+            >
               <option value="">All Statuses</option>
               {statuses.map((status) => (
                 <option key={status.value} value={status.value}>
@@ -193,7 +210,12 @@ const Map = () => {
 
           <div>
             <label className="form-label">Category</label>
-            <select name="category" className="form-select" value={filters.category} onChange={handleFilterChange}>
+            <select
+              name="category"
+              className="form-select"
+              value={filters.category}
+              onChange={handleFilterChange}
+            >
               <option value="">All Categories</option>
               {categories.map((category) => (
                 <option key={category.value} value={category.value}>
@@ -204,7 +226,10 @@ const Map = () => {
           </div>
 
           <div className="flex items-end">
-            <button onClick={() => setFilters({ status: "", category: "" })} className="btn btn-secondary w-full">
+            <button
+              onClick={() => setFilters({ status: "", category: "" })}
+              className="btn btn-secondary w-full"
+            >
               Clear Filters
             </button>
           </div>
@@ -256,13 +281,19 @@ const Map = () => {
               {reports.map((report) => (
                 <Marker
                   key={report._id}
-                  position={[report.location.coordinates[1], report.location.coordinates[0]]}
+                  position={[
+                    report.location.coordinates[1],
+                    report.location.coordinates[0],
+                  ]}
                   icon={createCustomIcon(report.status)}
                 >
                   <Popup maxWidth={300}>
                     <div className="p-2">
                       <h3 className="font-semibold text-lg mb-2">
-                        <Link to={`/reports/${report._id}`} className="text-blue-600 hover:underline">
+                        <Link
+                          to={`/reports/${report._id}`}
+                          className="text-blue-600 hover:underline"
+                        >
                           {report.title}
                         </Link>
                       </h3>
@@ -271,7 +302,9 @@ const Map = () => {
                         <div className="flex items-center gap-2 mb-1">
                           <span
                             className="px-2 py-1 rounded-full text-xs font-medium text-white"
-                            style={{ backgroundColor: getStatusColor(report.status) }}
+                            style={{
+                              backgroundColor: getStatusColor(report.status),
+                            }}
                           >
                             {report.status.replace("_", " ").toUpperCase()}
                           </span>
@@ -281,7 +314,9 @@ const Map = () => {
                         </div>
                       </div>
 
-                      <p className="text-sm text-gray-700 mb-3 line-clamp-3">{report.description}</p>
+                      <p className="text-sm text-gray-700 mb-3 line-clamp-3">
+                        {report.description}
+                      </p>
 
                       {report.images && report.images.length > 0 && (
                         <div className="mb-3">
@@ -291,7 +326,9 @@ const Map = () => {
                             className="w-full h-32 object-cover rounded border"
                           />
                           {report.images.length > 1 && (
-                            <p className="text-xs text-gray-500 mt-1">+{report.images.length - 1} more images</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              +{report.images.length - 1} more images
+                            </p>
                           )}
                         </div>
                       )}
@@ -299,11 +336,14 @@ const Map = () => {
                       <div className="text-xs text-gray-500 mb-3">
                         <p>Reported by {report.reporter?.name}</p>
                         <p>{formatDate(report.createdAt)}</p>
-                        {report.location?.address && <p>{report.location.address}</p>}
+                        {report.location?.address && (
+                          <p>{report.location.address}</p>
+                        )}
                         {report.location?.city && (
                           <p>
                             {report.location.city}
-                            {report.location.region && `, ${report.location.region}`}
+                            {report.location.region &&
+                              `, ${report.location.region}`}
                           </p>
                         )}
                       </div>
@@ -314,7 +354,10 @@ const Map = () => {
                         <span>💬 {report.comments?.length || 0}</span>
                       </div>
 
-                      <Link to={`/reports/${report._id}`} className="btn btn-primary w-full text-sm">
+                      <Link
+                        to={`/reports/${report._id}`}
+                        className="btn btn-primary w-full text-sm"
+                      >
                         View Details
                       </Link>
                     </div>
@@ -329,7 +372,9 @@ const Map = () => {
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
         <div className="card text-center">
-          <div className="text-2xl font-bold text-blue-600 mb-2">{reports.length}</div>
+          <div className="text-2xl font-bold text-blue-600 mb-2">
+            {reports.length}
+          </div>
           <div className="text-gray-600">Total Reports</div>
         </div>
         <div className="card text-center">
@@ -352,7 +397,7 @@ const Map = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Map
+export default Map;

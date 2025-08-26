@@ -69,6 +69,33 @@ const ReportDetail = () => {
     }
   }
 
+  {["municipal", "admin"].includes(user?.role) && (
+  <div className="mt-4">
+    <label className="block text-sm font-semibold mb-1">Update Status:</label>
+    <select
+      value={report.status}
+      onChange={async (e) => {
+        const newStatus = e.target.value
+        try {
+          await reportsAPI.updateReportStatus(report._id, newStatus)
+          setReport({ ...report, status: newStatus })
+          toast.success(`Report status updated to "${newStatus}"`)
+        } catch (err) {
+          console.error(err)
+          toast.error("Failed to update status")
+        }
+      }}
+      className="border px-3 py-2 rounded"
+    >
+      <option value="pending">Pending</option>
+      <option value="in_progress">In Progress</option>
+      <option value="resolved">Resolved</option>
+      <option value="rejected">Rejected</option>
+    </select>
+  </div>
+)}
+
+
   const getStatusColor = (status) => {
     switch (status) {
       case "pending":
