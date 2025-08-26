@@ -6,6 +6,7 @@ const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("citizen");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
@@ -17,7 +18,7 @@ const Register = () => {
     setError("");
 
     try {
-      await register(name, email, password);
+      await register(name, email, password, role);
       navigate("/dashboard");
     } catch (error) {
       setError(error.response?.data?.message || "Registration failed");
@@ -88,6 +89,20 @@ const Register = () => {
             borderRadius: "4px",
           }}
         />
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          required
+          style={{
+            padding: "0.75rem",
+            border: "1px solid #d1d5db",
+            borderRadius: "4px",
+          }}
+        >
+          <option value="citizen">Citizen</option>
+          <option value="municipal">Municipal</option>
+          <option value="admin">Admin</option>
+        </select>
         <button
           type="submit"
           disabled={loading}

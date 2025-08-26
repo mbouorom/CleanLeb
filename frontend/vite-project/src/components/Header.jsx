@@ -53,12 +53,12 @@ const Header = () => {
               >
                 Report Issue
               </Link>
-              {user.role === "admin" && (
+              {(user.role === "admin" || user.role === "municipal") && (
                 <Link
                   to="/admin"
                   style={{ color: "white", textDecoration: "none" }}
                 >
-                  Admin
+                  {user.role === "admin" ? "Admin" : "Municipal Panel"}
                 </Link>
               )}
               <span style={{ color: "#93c5fd" }}>

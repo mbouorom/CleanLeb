@@ -158,17 +158,24 @@ const AdminDashboard = () => {
                       fontSize: "0.8rem",
                     }}
                   >
-                    By {report.reportedBy.name} •{" "}
-                    {new Date(report.createdAt).toLocaleDateString()}
+                    By{" "}
+                    {report.reportedBy?.name ||
+                      report.reporter?.name ||
+                      "Anonymous"}{" "}
+                    • {new Date(report.createdAt).toLocaleDateString()}
                   </p>
                 </div>
                 <div
                   style={{ display: "flex", gap: "1rem", alignItems: "center" }}
                 >
                   <select
-                    value={report.status}
+                    value={report.status || "pending"}
                     onChange={(e) =>
-                      updateReport(report._id, e.target.value, report.priority)
+                      updateReport(
+                        report._id,
+                        e.target.value,
+                        report.priority || "medium"
+                      )
                     }
                     style={{
                       padding: "0.25rem",
@@ -183,9 +190,13 @@ const AdminDashboard = () => {
                     <option value="rejected">Rejected</option>
                   </select>
                   <select
-                    value={report.priority}
+                    value={report.priority || "medium"}
                     onChange={(e) =>
-                      updateReport(report._id, report.status, e.target.value)
+                      updateReport(
+                        report._id,
+                        report.status || "pending",
+                        e.target.value
+                      )
                     }
                     style={{
                       padding: "0.25rem",
@@ -205,19 +216,31 @@ const AdminDashboard = () => {
                 <div
                   style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}
                 >
-                  {report.images.map((image, index) => (
-                    <img
-                      key={index}
-                      src={image || "/placeholder.svg"}
-                      alt={`Report ${index + 1}`}
-                      style={{
-                        width: "60px",
-                        height: "60px",
-                        objectFit: "cover",
-                        borderRadius: "4px",
-                      }}
-                    />
-                  ))}
+                  {report.images.map((image, index) => {
+                    // Handle both string URLs and objects with url property
+                    const imageUrl =
+                      typeof image === "string" ? image : image?.url;
+                    const fullImageUrl = imageUrl
+                      ? `http://localhost:5000${imageUrl}`
+                      : null;
+
+                    return fullImageUrl ? (
+                      <img
+                        key={index}
+                        src={fullImageUrl}
+                        alt={`Report ${index + 1}`}
+                        style={{
+                          width: "60px",
+                          height: "60px",
+                          objectFit: "cover",
+                          borderRadius: "4px",
+                        }}
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                    ) : null;
+                  })}
                 </div>
               )}
             </div>

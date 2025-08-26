@@ -6,7 +6,11 @@ const AdminRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
   if (loading) return <div>Loading...</div>;
-  return user && user.role === "admin" ? children : <Navigate to="/" />;
+  return user && (user.role === "admin" || user.role === "municipal") ? (
+    children
+  ) : (
+    <Navigate to="/" />
+  );
 };
 
 export default AdminRoute;
