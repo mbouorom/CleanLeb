@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const mongoose = require("mongoose")
 const bcrypt = require("bcryptjs")
 
@@ -7,6 +8,7 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      maxlength: 100,
     },
     email: {
       type: String,

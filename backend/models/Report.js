@@ -1,4 +1,5 @@
-const mongoose = require("mongoose")
+/* eslint-disable @typescript-eslint/no-require-imports */
+const mongoose = require("mongoose");
 
 const ReportSchema = new mongoose.Schema(
   {
@@ -14,7 +15,15 @@ const ReportSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: ["illegal_dumping", "overflowing_bins", "missed_collection", "hazardous_waste", "other"],
+      enum: [
+        "illegal_dumping",
+        "overflowing_bins",
+        "missed_collection",
+        "hazardous_waste",
+        "littering",
+        "recycling",
+        "other",
+      ],
     },
     location: {
       type: {
@@ -102,10 +111,10 @@ const ReportSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  },
-)
+  }
+);
 
 // Create geospatial index for location-based queries
-ReportSchema.index({ location: "2dsphere" })
+ReportSchema.index({ location: "2dsphere" });
 
-module.exports = mongoose.model("Report", ReportSchema)
+module.exports = mongoose.model("Report", ReportSchema);

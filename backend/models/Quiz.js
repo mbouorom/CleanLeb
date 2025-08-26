@@ -1,50 +1,67 @@
-const mongoose = require("mongoose")
+// ===== 1. Quiz Model (models/Quiz.js) =====
+/* eslint-disable @typescript-eslint/no-require-imports */
+const mongoose = require('mongoose');
 
-const QuizSchema = new mongoose.Schema(
-  {
-    title: {
-      type: String,
-      required: true,
-    },
-    description: String,
-    category: {
-      type: String,
-      enum: ["recycling", "composting", "waste_reduction", "general"],
-      required: true,
-    },
-    questions: [
-      {
-        question: {
-          type: String,
-          required: true,
-        },
-        options: [
-          {
-            text: String,
-            isCorrect: Boolean,
-          },
-        ],
-        explanation: String,
-        points: {
-          type: Number,
-          default: 10,
-        },
-      },
-    ],
-    difficulty: {
-      type: String,
-      enum: ["easy", "medium", "hard"],
-      default: "easy",
-    },
-    totalPoints: Number,
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
+const quizSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+    trim: true
   },
-  {
-    timestamps: true,
+  description: {
+    type: String,
+    required: true
   },
-)
+  category: {
+    type: String,
+    enum: ['waste_management', 'recycling', 'environment', 'sustainability'],
+    default: 'environment'
+  },
+  difficulty: {
+    type: String,
+    enum: ['easy', 'medium', 'hard'],
+    default: 'medium'
+  },
+  questions: [{
+    question: {
+      type: String,
+      required: true
+    },
+    options: [{
+      text: {
+        type: String,
+        required: true
+      }
+    }],
+    correctAnswer: {
+      type: Number,
+      required: true // Index of correct option
+    },
+    points: {
+      type: Number,
+      default: 10
+    }
+  }],
+  totalPoints: {
+    type: Number,
+    default: 0
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  }
+}, {
+  timestamps: true
+});
 
-module.exports = mongoose.model("Quiz", QuizSchema)
+// Calculate total points before saving
+quizSchema.pre('save', function() {
+  this.totalPoints = this.questions.reduce((total, question) => total + question.points, 0);
+});
+
+module.exports = mongoose.model('Quiz', quizSchema);
