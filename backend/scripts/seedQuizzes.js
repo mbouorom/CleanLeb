@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
-const Quiz = require("../../backend/models/Quiz");
+const Quiz = require("../models/Quiz");
+require("dotenv").config();
 
-// Connect to MongoDB (adjust the connection string as needed)
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(
@@ -55,7 +55,7 @@ const sampleQuizzes = [
         points: 15,
       },
     ],
-    createdBy: new mongoose.Types.ObjectId(), // Create a dummy ObjectId for now
+    createdBy: new mongoose.Types.ObjectId(),
     isActive: true,
   },
   {
@@ -87,8 +87,20 @@ const sampleQuizzes = [
         correctAnswer: 0,
         points: 20,
       },
+      {
+        question:
+          "What percentage of plastic waste is actually recycled globally?",
+        options: [
+          { text: "Less than 10%" },
+          { text: "Around 25%" },
+          { text: "About 50%" },
+          { text: "Over 75%" },
+        ],
+        correctAnswer: 0,
+        points: 15,
+      },
     ],
-    createdBy: new mongoose.Types.ObjectId(), // Create a dummy ObjectId for now
+    createdBy: new mongoose.Types.ObjectId(),
     isActive: true,
   },
   {
@@ -110,7 +122,7 @@ const sampleQuizzes = [
       },
       {
         question:
-          "Which renewable energy source has the lowest carbon footprint?",
+          "Which renewable energy source has the lowest carbon footprint over its lifecycle?",
         options: [
           { text: "Solar panels" },
           { text: "Wind turbines" },
@@ -128,34 +140,38 @@ const sampleQuizzes = [
 
 const seedQuizzes = async () => {
   try {
-    console.log("Connecting to database...");
+    console.log("Starting quiz seeding process...");
     await connectDB();
 
     console.log("Clearing existing quizzes...");
     await Quiz.deleteMany({});
 
     console.log("Inserting sample quizzes...");
-    const insertedQuizzes = await Quiz.insertMany(sampleQuizzes);
 
-    console.log(`✅ Successfully seeded ${insertedQuizzes.length} quizzes:`);
+    // Insert quizzes one by one to ensure pre-save hooks work
+    const insertedQuizzes = [];
+    for (let quizData of sampleQuizzes) {
+      const quiz = new Quiz(quizData);
+      await quiz.save(); // This will trigger the pre-save hook
+      insertedQuizzes.push(quiz);
+    }
+
+    console.log(`Successfully seeded ${insertedQuizzes.length} quizzes:`);
     insertedQuizzes.forEach((quiz) => {
       console.log(
-        `  - ${quiz.title} (${quiz.difficulty}) - ${quiz.questions.length} questions`
+        `   - ${quiz.title} (${quiz.difficulty}) - ${quiz.questions.length} questions - ${quiz.totalPoints} points`
       );
     });
 
     mongoose.connection.close();
     console.log("Database connection closed.");
+    console.log("Seeding complete! You can now test your quiz functionality.");
   } catch (error) {
-    console.error("❌ Error seeding quizzes:", error);
+    console.error("Error seeding quizzes:", error);
     mongoose.connection.close();
     process.exit(1);
   }
 };
 
-// Run the seed function if this file is executed directly
-if (require.main === module) {
-  seedQuizzes();
-}
-
-module.exports = seedQuizzes;
+// Run the seed function
+seedQuizzes();

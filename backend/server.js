@@ -8,21 +8,21 @@ const morgan = require("morgan");
 
 const app = express();
 
-const quizRoutes = require('./routes/quiz');
-app.use('/api/education', quizRoutes);
-
+// Middleware should come before routes
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
+// Import routes
 const authRoutes = require("./routes/auth");
 const reportRoutes = require("./routes/reports");
 const userRoutes = require("./routes/users");
 const adminRoutes = require("./routes/admin");
-const educationRoutes = require("./routes/education");
+const quizRoutes = require("./routes/quiz");
 
+// Database connection
 mongoose
   .connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
@@ -34,12 +34,14 @@ mongoose
     process.exit(1);
   });
 
+// Route setup
 app.use("/api/auth", authRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/education", educationRoutes);
+app.use("/api/education", quizRoutes); // Only use quiz routes
 
+// Production setup
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "client/build")));
   app.get("*", (req, res) =>

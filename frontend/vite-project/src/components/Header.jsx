@@ -38,6 +38,12 @@ const Header = () => {
           <Link to="/map" style={{ color: "white", textDecoration: "none" }}>
             Map
           </Link>
+          <Link
+            to="/education"
+            style={{ color: "white", textDecoration: "none" }}
+          >
+            Quiz
+          </Link>
 
           {user ? (
             <>

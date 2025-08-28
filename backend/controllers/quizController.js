@@ -1,33 +1,48 @@
 // ===== 3. Quiz Controller (controllers/quizController.js) =====
 /* eslint-disable @typescript-eslint/no-require-imports */
-const Quiz = require('../models/Quiz');
-const QuizSubmission = require('../models/QuizSubmission');
-const User = require('../models/User');
+const Quiz = require("../models/Quiz");
+const QuizSubmission = require("../models/QuizSubmission");
+const User = require("../models/User");
 
 // Get all quizzes
 const getQuizzes = async (req, res) => {
   try {
     const { category, difficulty, limit = 10 } = req.query;
-    
+
     const filter = { isActive: true };
     if (category) filter.category = category;
     if (difficulty) filter.difficulty = difficulty;
 
     const quizzes = await Quiz.find(filter)
-      .select('title description category difficulty totalPoints createdAt')
+      .select(
+        "title description category difficulty totalPoints createdAt questions"
+      )
       .sort({ createdAt: -1 })
       .limit(parseInt(limit))
-      .populate('createdBy', 'name');
+      .populate("createdBy", "name");
+
+    // Transform the data to include question count but not the actual questions/answers
+    const quizzesWithCounts = quizzes.map((quiz) => ({
+      _id: quiz._id,
+      title: quiz.title,
+      description: quiz.description,
+      category: quiz.category,
+      difficulty: quiz.difficulty,
+      totalPoints: quiz.totalPoints,
+      createdAt: quiz.createdAt,
+      createdBy: quiz.createdBy,
+      questionCount: quiz.questions.length, // Add question count
+    }));
 
     res.json({
       success: true,
-      quizzes
+      quizzes: quizzesWithCounts,
     });
   } catch (error) {
-    console.error('Get quizzes error:', error);
+    console.error("Get quizzes error:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch quizzes'
+      message: "Failed to fetch quizzes",
     });
   }
 };
@@ -36,34 +51,33 @@ const getQuizzes = async (req, res) => {
 const getQuiz = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    const quiz = await Quiz.findById(id)
-      .populate('createdBy', 'name');
+
+    const quiz = await Quiz.findById(id).populate("createdBy", "name");
 
     if (!quiz || !quiz.isActive) {
       return res.status(404).json({
         success: false,
-        message: 'Quiz not found'
+        message: "Quiz not found",
       });
     }
 
     // Remove correct answers from response
     const quizData = quiz.toObject();
-    quizData.questions = quizData.questions.map(q => ({
+    quizData.questions = quizData.questions.map((q) => ({
       question: q.question,
       options: q.options,
-      points: q.points
+      points: q.points,
     }));
 
     res.json({
       success: true,
-      data: quizData
+      data: quizData,
     });
   } catch (error) {
-    console.error('Get quiz error:', error);
+    console.error("Get quiz error:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch quiz'
+      message: "Failed to fetch quiz",
     });
   }
 };
@@ -80,20 +94,20 @@ const submitQuiz = async (req, res) => {
     if (!quiz || !quiz.isActive) {
       return res.status(404).json({
         success: false,
-        message: 'Quiz not found'
+        message: "Quiz not found",
       });
     }
 
     // Check if user already submitted
     const existingSubmission = await QuizSubmission.findOne({
       quiz: id,
-      user: userId
+      user: userId,
     });
 
     if (existingSubmission) {
       return res.status(400).json({
         success: false,
-        message: 'You have already completed this quiz'
+        message: "You have already completed this quiz",
       });
     }
 
@@ -101,7 +115,7 @@ const submitQuiz = async (req, res) => {
     if (!answers || answers.length !== quiz.questions.length) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid answers provided'
+        message: "Invalid answers provided",
       });
     }
 
@@ -117,7 +131,9 @@ const submitQuiz = async (req, res) => {
       }
     });
 
-    const percentage = Math.round((correctAnswers / quiz.questions.length) * 100);
+    const percentage = Math.round(
+      (correctAnswers / quiz.questions.length) * 100
+    );
 
     // Create submission
     const submission = new QuizSubmission({
@@ -127,14 +143,14 @@ const submitQuiz = async (req, res) => {
       score: totalScore,
       totalQuestions: quiz.questions.length,
       correctAnswers,
-      percentage
+      percentage,
     });
 
     await submission.save();
 
     // Update user points
     await User.findByIdAndUpdate(userId, {
-      $inc: { points: totalScore }
+      $inc: { points: totalScore },
     });
 
     res.json({
@@ -144,14 +160,14 @@ const submitQuiz = async (req, res) => {
         totalScore,
         correctAnswers,
         totalQuestions: quiz.questions.length,
-        percentage
-      }
+        percentage,
+      },
     });
   } catch (error) {
-    console.error('Submit quiz error:', error);
+    console.error("Submit quiz error:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to submit quiz'
+      message: "Failed to submit quiz",
     });
   }
 };
@@ -166,22 +182,29 @@ const createQuiz = async (req, res) => {
     if (!questions || questions.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Quiz must have at least one question'
+        message: "Quiz must have at least one question",
       });
     }
 
     // Validate each question
     for (let question of questions) {
-      if (!question.question || !question.options || question.options.length < 2) {
+      if (
+        !question.question ||
+        !question.options ||
+        question.options.length < 2
+      ) {
         return res.status(400).json({
           success: false,
-          message: 'Each question must have text and at least 2 options'
+          message: "Each question must have text and at least 2 options",
         });
       }
-      if (question.correctAnswer === undefined || question.correctAnswer >= question.options.length) {
+      if (
+        question.correctAnswer === undefined ||
+        question.correctAnswer >= question.options.length
+      ) {
         return res.status(400).json({
           success: false,
-          message: 'Each question must have a valid correct answer'
+          message: "Each question must have a valid correct answer",
         });
       }
     }
@@ -192,25 +215,25 @@ const createQuiz = async (req, res) => {
       category,
       difficulty,
       questions,
-      createdBy: userId
+      createdBy: userId,
     });
 
     await quiz.save();
 
     res.status(201).json({
       success: true,
-      message: 'Quiz created successfully',
+      message: "Quiz created successfully",
       quiz: {
         id: quiz._id,
         title: quiz.title,
-        totalPoints: quiz.totalPoints
-      }
+        totalPoints: quiz.totalPoints,
+      },
     });
   } catch (error) {
-    console.error('Create quiz error:', error);
+    console.error("Create quiz error:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to create quiz'
+      message: "Failed to create quiz",
     });
   }
 };
@@ -222,19 +245,19 @@ const getUserQuizHistory = async (req, res) => {
     const { limit = 10 } = req.query;
 
     const submissions = await QuizSubmission.find({ user: userId })
-      .populate('quiz', 'title category difficulty')
+      .populate("quiz", "title category difficulty")
       .sort({ completedAt: -1 })
       .limit(parseInt(limit));
 
     res.json({
       success: true,
-      submissions
+      submissions,
     });
   } catch (error) {
-    console.error('Get quiz history error:', error);
+    console.error("Get quiz history error:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch quiz history'
+      message: "Failed to fetch quiz history",
     });
   }
 };
@@ -244,5 +267,5 @@ module.exports = {
   getQuiz,
   submitQuiz,
   createQuiz,
-  getUserQuizHistory
+  getUserQuizHistory,
 };
